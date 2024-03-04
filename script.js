@@ -23,12 +23,12 @@ let settingsDisplay = 0;
 let playButtonState = true;
 
 function showSettings(){
-    if(settingsDisplay == 1){
+    if(settingsDisplay == 0){
         settingsDiv.style.display = 'block';
-        settingsDisplay = 0;
+        settingsDisplay = 1;
     } else {
         settingsDiv.style.display = 'none';
-        settingsDisplay = 1;
+        settingsDisplay = 0;
     }
 }
 
