@@ -3,6 +3,7 @@ let timer = document.getElementById("timer");
 let playButton = document.getElementById("play-button");
 let resetButton = document.getElementById("reset-button");
 let breakButton = document.getElementById("break-button");
+let settingsDiv = document.getElementById("settings");
 
 let workTime = document.getElementById("work-time");
 let baseBreakDurationLong = document.getElementById("long-break");
@@ -18,7 +19,18 @@ let workSessions = 0;
 let isWorking = true;
 let intervalId;
 let currentBreakTime;
+let settingsDisplay = 0;
 let playButtonState = true;
+
+function showSettings(){
+    if(settingsDisplay == 1){
+        settingsDiv.style.display = 'block';
+        settingsDisplay = 0;
+    } else {
+        settingsDiv.style.display = 'none';
+        settingsDisplay = 1;
+    }
+}
 
 function formatTime(seconds) {
     let minutes = Math.floor(seconds / 60);
