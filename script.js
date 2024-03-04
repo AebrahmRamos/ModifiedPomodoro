@@ -12,6 +12,7 @@ let shortBreakIncrease = 0.1;
 let longBreakIncrease = 0.3;
 let breakTimeElement = document.getElementById("break-time");
 
+let extraTime = 0;
 let secondsElapsed = 0;
 let workSessions = 0;
 let isWorking = true;
@@ -35,7 +36,7 @@ function updateTimer() {
     secondsElapsed++;
     if (isWorking) {
         let extraTime = Math.max(0, (secondsElapsed / 60) - workTime.value);
-        if ((workSessions + 1) % longBreakInterval.value == 0 && workSessions != 0) {
+        if (workSessions % longBreakInterval.value == 0 && workSessions != 0) {
             currentBreakTime = parseInt(baseBreakDurationLong.value) + extraTime * longBreakIncrease;
         } else {
             currentBreakTime = parseInt(baseBreakDurationShort.value) + extraTime * shortBreakIncrease;
@@ -44,7 +45,6 @@ function updateTimer() {
         timer.textContent = formatTime(secondsElapsed);
         if (secondsElapsed / 60 >= workTime.value) {
             breakButton.disabled = false;
-            workSessions++;
         } else {
             breakButton.disabled = true;
         }
@@ -66,12 +66,11 @@ function updateTimer() {
 playButton.addEventListener("click", () => {
     playButton.classList.toggle('glyphicon-play');
     playButton.classList.toggle('glyphicon-pause');
-    if (playButtonState) {
+    if (playButton.classList.contains('glyphicon-pause')) {
         intervalId = setInterval(updateTimer, 1000);
     } else {
         clearInterval(intervalId);
     }
-    playButtonState = !playButtonState;
 })
 
 resetButton.addEventListener("click", () => {
@@ -95,18 +94,23 @@ function startWork() {
     intervalId = setInterval(updateTimer, 1000);
     breakTimeElement.parentNode.style.display = "inline";
     breakButton.textContent = "Start Break";
+    playButton.classList.remove('glyphicon-play');
+    playButton.classList.add('glyphicon-pause');
 }
 
 function startBreak() {
+    workSessions++;
     clearInterval(intervalId);
     isWorking = false;
-    let extraTime = Math.max(0, (secondsElapsed / 60) - workTime.value);
+    extraTime = Math.max(0, (secondsElapsed / 60) - workTime.value);
     currentBreakTime = parseInt(baseBreakDurationShort.value) + extraTime * shortBreakIncrease;
     secondsElapsed = 0;
     timer.textContent = formatTime(secondsElapsed);
     breakTimeElement.parentNode.style.display = "none";
     intervalId = setInterval(updateTimer, 1000);
     breakButton.textContent = "Start Work";
+    playButton.classList.remove('glyphicon-play');
+    playButton.classList.add('glyphicon-pause');
 }
 
 breakButton.addEventListener("click", () => {
