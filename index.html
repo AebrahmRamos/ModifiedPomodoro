@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modified Pomodoro Timer</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style>
+        #timer {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        #controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        #play-button, #break-button, #reset-button {
+            margin-left:5px;
+            margin-right: 5px;
+        }
+        #settings {
+            margin: 20px;
+        }
+        input[type="number"] {
+            width: 50px;
+            padding: 5px;
+            border: 1px solid black;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
+          Modified Pomodoro
+        </a>
+    </nav>
+    <div class="container">
+        <div id="settings">
+            <div class="row">
+                <div class="col">
+                    <label for="work-time">Work Time :</label>
+                </div>
+                <div class="col">
+                    <input type="number" id="work-time" value="25" min="25">
+                </div>
+                <div class="col">
+                    <label for="short-break">Short Break :</label>
+                </div>
+                <div class="col">
+                    <input type="number" id="short-break" value="5" min="1">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label for="long-break">Long Break :</label>
+                </div>
+                <div class="col">
+                    <input type="number" id="long-break" value="15" min="1">
+                </div>
+                <div class="col">
+                    <label for="long-break-interval">long break interval:</label>
+                </div>
+                <div class="col">
+                    <input type="number" id="long-break-interval" value="4" min="1">
+                </div>
+            </div>
+        </div>
+    </div>
+    <center>
+        <p class="text-center">Next Break Time: <span id="break-time">0</span> minutes</p>
+    </center>
+    <div id="timer">00:00</div>
+    <div id="controls">
+        <button id="play-button" class="btn btn-primary glyphicon glyphicon-play"></button>
+        <button id="reset-button" class="btn btn-secondary">Reset</button>
+        <button id="break-button" class="btn btn-danger" disabled>Start Break</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
