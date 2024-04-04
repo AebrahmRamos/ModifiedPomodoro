@@ -12,6 +12,7 @@ let longBreakInterval = document.getElementById("long-break-interval");
 let shortBreakIncrease = 0.1;
 let longBreakIncrease = 0.3;
 let breakTimeElement = document.getElementById("break-time");
+let worker = new Worker('worker.js');
 
 let extraTime = 0;
 let secondsElapsed = 0;
@@ -61,8 +62,22 @@ function updateTimer() {
             breakButton.disabled = true;
         }
     } else {
-        timer.textContent = formatTime(secondsElapsed);
-        if (secondsElapsed >= currentBreakTime * 60) {
+        worker.postMessage(
+            { isWorking,
+                secondsElapsed,
+                workTime: workTime.value,
+                baseBreakDurationShort: baseBreakDurationShort.value,
+                baseBreakDurationLong: baseBreakDurationLong.value,
+                longBreakInterval: longBreakInterval.value,
+                workSessions 
+            }
+        );
+        worker.addEventListener('message', event => {
+          currentBreakTime = event.data.currentBreakTime;
+          breakTimeElement.textContent = currentBreakTime.toFixed(2);
+          timer.textContent = formatTime(secondsElapsed);
+          
+          if (secondsElapsed >= currentBreakTime * 60) {
             clearInterval(intervalId);
             isWorking = true;
             secondsElapsed = 0;
@@ -70,7 +85,8 @@ function updateTimer() {
             breakTimeElement.parentNode.style.display = "block";
             intervalId = setInterval(updateTimer, 1000);
             breakButton.textContent = "Start Break";
-        }
+          }
+        });
     }
 }
 
