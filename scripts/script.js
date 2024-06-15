@@ -12,7 +12,7 @@ let longBreakInterval = document.getElementById("long-break-interval");
 let shortBreakIncrease = 0.1;
 let longBreakIncrease = 0.3;
 let breakTimeElement = document.getElementById("break-time");
-let worker = new Worker('scripts/worker.js');
+let worker = new Worker('scripts/worker.js'); // Updated path
 
 let extraTime = 0;
 let secondsElapsed = 0;
@@ -64,12 +64,17 @@ function startWorker() {
 }
 
 worker.onmessage = function(event) {
-    // console.log("Main script received message:", event.data);
+    console.log("Main script received message:", event.data);
     const { currentBreakTime, secondsElapsed: newSecondsElapsed } = event.data;
     secondsElapsed = newSecondsElapsed;
     breakTimeElement.textContent = currentBreakTime.toFixed(2);
     timer.textContent = formatTime(secondsElapsed);
     
+    // Enable the break button if the study time exceeds the work time
+    if (isWorking && (secondsElapsed / 60) >= workTime.value) {
+        breakButton.disabled = false;
+    }
+
     if (!isWorking && secondsElapsed >= currentBreakTime * 60) {
         isWorking = true;
         secondsElapsed = 0;
@@ -92,13 +97,14 @@ playButton.addEventListener("click", () => {
 
 resetButton.addEventListener("click", () => {
     worker.terminate();
-    worker = new Worker('scripts/worker.js');
+    worker = new Worker('scripts/worker.js'); // Updated path
     secondsElapsed = 0;
     isWorking = true;
     timer.textContent = formatTime(0);
     breakTimeElement.textContent = "0.00";
     playButton.classList.remove('glyphicon-pause');
     playButton.classList.add('glyphicon-play');
+    breakButton.disabled = true; // Reset the break button state
 });
 
 function startWork() {
