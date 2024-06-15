@@ -19,6 +19,7 @@ let secondsElapsed = 0;
 let workSessions = 0;
 let isWorking = true;
 let settingsDisplay = 0;
+let currentBreakTime = 0;
 
 function showSettings(){
     if(settingsDisplay === 0){
@@ -30,14 +31,8 @@ function showSettings(){
     }
 }
 
-function formatTime(seconds) {
+function formatTime(seconds, limit) {
     let minutes = Math.floor(seconds / 60);
-    let limit;
-    if (isWorking) {
-        limit = workTime.value;
-    } else {
-        limit = Math.floor(currentBreakTime / 60);
-    }
     seconds = seconds % 60;
     return minutes.toString().padStart(2, "0") + ":" + seconds.toString().padStart(2, "0") + " / " + limit.toString().padStart(2, "0") + ":00";
 }
@@ -64,11 +59,12 @@ function startWorker() {
 }
 
 worker.onmessage = function(event) {
-    // console.log("Main script received message:", event.data);
-    const { currentBreakTime, secondsElapsed: newSecondsElapsed } = event.data;
+    console.log("Main script received message:", event.data);
+    const { currentBreakTime: newBreakTime, secondsElapsed: newSecondsElapsed } = event.data;
+    currentBreakTime = newBreakTime;
     secondsElapsed = newSecondsElapsed;
     breakTimeElement.textContent = currentBreakTime.toFixed(2);
-    timer.textContent = formatTime(secondsElapsed);
+    timer.textContent = formatTime(secondsElapsed, isWorking ? workTime.value : Math.floor(currentBreakTime / 60));
     
     // Enable the break button if the study time exceeds the work time
     if (isWorking && (secondsElapsed / 60) >= workTime.value) {
@@ -78,7 +74,7 @@ worker.onmessage = function(event) {
     if (!isWorking && secondsElapsed >= currentBreakTime * 60) {
         isWorking = true;
         secondsElapsed = 0;
-        timer.textContent = formatTime(secondsElapsed);
+        timer.textContent = formatTime(secondsElapsed, workTime.value);
         breakTimeElement.parentNode.style.display = "block";
         startWorker();
         breakButton.textContent = "Start Break";
@@ -100,7 +96,7 @@ resetButton.addEventListener("click", () => {
     worker = new Worker('scripts/worker.js'); // Updated path
     secondsElapsed = 0;
     isWorking = true;
-    timer.textContent = formatTime(0);
+    timer.textContent = formatTime(0, workTime.value);
     breakTimeElement.textContent = "0.00";
     playButton.classList.remove('glyphicon-pause');
     playButton.classList.add('glyphicon-play');
@@ -110,7 +106,7 @@ resetButton.addEventListener("click", () => {
 function startWork() {
     isWorking = true;
     secondsElapsed = 0;
-    timer.textContent = formatTime(secondsElapsed);
+    timer.textContent = formatTime(secondsElapsed, workTime.value);
     breakTimeElement.parentNode.style.display = "inline";
     breakButton.textContent = "Start Break";
     playButton.classList.remove('glyphicon-play');
@@ -124,7 +120,7 @@ function startBreak() {
     extraTime = Math.max(0, (secondsElapsed / 60) - workTime.value);
     currentBreakTime = parseInt(baseBreakDurationShort.value) + extraTime * shortBreakIncrease;
     secondsElapsed = 0;
-    timer.textContent = formatTime(secondsElapsed);
+    timer.textContent = formatTime(secondsElapsed, Math.floor(currentBreakTime / 60));
     breakTimeElement.parentNode.style.display = "none";
     startWorker();
     breakButton.textContent = "Start Work";
