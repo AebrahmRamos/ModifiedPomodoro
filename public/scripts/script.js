@@ -64,7 +64,7 @@ function startWorker() {
 }
 
 worker.onmessage = function(event) {
-    console.log("Main script received message:", event.data);
+    // console.log("Main script received message:", event.data);
     const { currentBreakTime, secondsElapsed: newSecondsElapsed } = event.data;
     secondsElapsed = newSecondsElapsed;
     breakTimeElement.textContent = currentBreakTime.toFixed(2);
