@@ -18,13 +18,10 @@ let extraTime = 0;
 let secondsElapsed = 0;
 let workSessions = 0;
 let isWorking = true;
-let intervalId;
-let currentBreakTime;
 let settingsDisplay = 0;
-let playButtonState = true;
 
 function showSettings(){
-    if(settingsDisplay == 0){
+    if(settingsDisplay === 0){
         settingsDiv.style.display = 'block';
         settingsDisplay = 1;
     } else {
@@ -36,7 +33,7 @@ function showSettings(){
 function formatTime(seconds) {
     let minutes = Math.floor(seconds / 60);
     let limit;
-    if (workTime) {
+    if (isWorking) {
         limit = workTime.value;
     } else {
         limit = Math.floor(currentBreakTime / 60);
@@ -45,97 +42,85 @@ function formatTime(seconds) {
     return minutes.toString().padStart(2, "0") + ":" + seconds.toString().padStart(2, "0") + " / " + limit.toString().padStart(2, "0") + ":00";
 }
 
-function updateTimer() {
-    secondsElapsed++;
-    if (isWorking) {
-        let extraTime = Math.max(0, (secondsElapsed / 60) - workTime.value);
-        if (workSessions % longBreakInterval.value == 0 && workSessions != 0) {
-            currentBreakTime = parseInt(baseBreakDurationLong.value) + extraTime * longBreakIncrease;
-        } else {
-            currentBreakTime = parseInt(baseBreakDurationShort.value) + extraTime * shortBreakIncrease;
-        }
-        breakTimeElement.textContent = currentBreakTime.toFixed(2);
-        timer.textContent = formatTime(secondsElapsed);
-        if (secondsElapsed / 60 >= workTime.value) {
-            breakButton.disabled = false;
-        } else {
-            breakButton.disabled = true;
-        }
-    } else {
-        worker.postMessage(
-            { isWorking,
-                secondsElapsed,
-                workTime: workTime.value,
-                baseBreakDurationShort: baseBreakDurationShort.value,
-                baseBreakDurationLong: baseBreakDurationLong.value,
-                longBreakInterval: longBreakInterval.value,
-                workSessions 
-            }
-        );
-        worker.addEventListener('message', event => {
-          currentBreakTime = event.data.currentBreakTime;
-          breakTimeElement.textContent = currentBreakTime.toFixed(2);
-          timer.textContent = formatTime(secondsElapsed);
-          
-          if (secondsElapsed >= currentBreakTime * 60) {
-            clearInterval(intervalId);
-            isWorking = true;
-            secondsElapsed = 0;
-            timer.textContent = formatTime(secondsElapsed);
-            breakTimeElement.parentNode.style.display = "block";
-            intervalId = setInterval(updateTimer, 1000);
-            breakButton.textContent = "Start Break";
-          }
-        });
-    }
+function startWorker() {
+    console.log("Starting worker with data:", {
+        isWorking,
+        secondsElapsed,
+        workTime: workTime.value,
+        baseBreakDurationShort: baseBreakDurationShort.value,
+        baseBreakDurationLong: baseBreakDurationLong.value,
+        longBreakInterval: longBreakInterval.value,
+        workSessions 
+    });
+    worker.postMessage({
+        isWorking,
+        secondsElapsed,
+        workTime: workTime.value,
+        baseBreakDurationShort: baseBreakDurationShort.value,
+        baseBreakDurationLong: baseBreakDurationLong.value,
+        longBreakInterval: longBreakInterval.value,
+        workSessions 
+    });
 }
 
+worker.onmessage = function(event) {
+    // console.log("Main script received message:", event.data);
+    const { currentBreakTime, secondsElapsed: newSecondsElapsed } = event.data;
+    secondsElapsed = newSecondsElapsed;
+    breakTimeElement.textContent = currentBreakTime.toFixed(2);
+    timer.textContent = formatTime(secondsElapsed);
+    
+    if (!isWorking && secondsElapsed >= currentBreakTime * 60) {
+        isWorking = true;
+        secondsElapsed = 0;
+        timer.textContent = formatTime(secondsElapsed);
+        breakTimeElement.parentNode.style.display = "block";
+        startWorker();
+        breakButton.textContent = "Start Break";
+    }
+};
 
 playButton.addEventListener("click", () => {
     playButton.classList.toggle('glyphicon-play');
     playButton.classList.toggle('glyphicon-pause');
     if (playButton.classList.contains('glyphicon-pause')) {
-        intervalId = setInterval(updateTimer, 1000);
+        startWorker();
     } else {
-        clearInterval(intervalId);
+        worker.postMessage({ pause: true });
     }
-})
+});
 
 resetButton.addEventListener("click", () => {
-    clearInterval(intervalId);
-    if (isWorking) {
-        secondsElapsed = 0;
-        timer.textContent = formatTime(0);
-    } else {
-        secondsElapsed = 0;
-        timer.textContent = formatTime(secondsElapsed);
-    }
-    playButton.disabled = false;
-    resetButton.disabled = false;
-})
+    worker.terminate();
+    worker = new Worker('worker.js');
+    secondsElapsed = 0;
+    isWorking = true;
+    timer.textContent = formatTime(0);
+    breakTimeElement.textContent = "0.00";
+    playButton.classList.remove('glyphicon-pause');
+    playButton.classList.add('glyphicon-play');
+});
 
 function startWork() {
-    clearInterval(intervalId);
     isWorking = true;
     secondsElapsed = 0;
     timer.textContent = formatTime(secondsElapsed);
-    intervalId = setInterval(updateTimer, 1000);
     breakTimeElement.parentNode.style.display = "inline";
     breakButton.textContent = "Start Break";
     playButton.classList.remove('glyphicon-play');
     playButton.classList.add('glyphicon-pause');
+    startWorker();
 }
 
 function startBreak() {
     workSessions++;
-    clearInterval(intervalId);
     isWorking = false;
     extraTime = Math.max(0, (secondsElapsed / 60) - workTime.value);
     currentBreakTime = parseInt(baseBreakDurationShort.value) + extraTime * shortBreakIncrease;
     secondsElapsed = 0;
     timer.textContent = formatTime(secondsElapsed);
     breakTimeElement.parentNode.style.display = "none";
-    intervalId = setInterval(updateTimer, 1000);
+    startWorker();
     breakButton.textContent = "Start Work";
     playButton.classList.remove('glyphicon-play');
     playButton.classList.add('glyphicon-pause');
@@ -147,4 +132,4 @@ breakButton.addEventListener("click", () => {
     } else {
         startWork();
     }
-})
+});

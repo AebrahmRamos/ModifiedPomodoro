@@ -1,0 +1,27 @@
+#timer {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+}
+#controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+#play-button, #break-button, #reset-button, #settings-button {
+    margin-left:5px;
+    margin-right: 5px;
+}
+#settings {
+    margin: 20px;
+}
+input[type="number"] {
+    width: 50px;
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 5px;
+    margin: 5px;
+}
+.text-center {
+    text-align: center;
+}
