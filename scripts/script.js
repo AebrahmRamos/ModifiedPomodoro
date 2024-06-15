@@ -12,7 +12,7 @@ let longBreakInterval = document.getElementById("long-break-interval");
 let shortBreakIncrease = 0.1;
 let longBreakIncrease = 0.3;
 let breakTimeElement = document.getElementById("break-time");
-let worker = new Worker('worker.js');
+let worker = new Worker('scripts/worker.js');
 
 let extraTime = 0;
 let secondsElapsed = 0;
@@ -92,7 +92,7 @@ playButton.addEventListener("click", () => {
 
 resetButton.addEventListener("click", () => {
     worker.terminate();
-    worker = new Worker('worker.js');
+    worker = new Worker('scripts/worker.js');
     secondsElapsed = 0;
     isWorking = true;
     timer.textContent = formatTime(0);
