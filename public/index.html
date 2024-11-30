@@ -3,58 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modified Pomodoro Timer</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <title>Pomodoro Timer</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="">
-    <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
-          Modified Pomodoro
-        </a>
-    </nav>
-    <center>
-        <p class="text-center">Next Break Time: <span id="break-time">0</span> minutes</p>
-    </center>
-    <div id="timer">00:00</div>
-    <div id="controls">
-        <button id="settings-button" class="btn btn-secondary glyphicon glyphicon-cog" onclick="showSettings()"></button>
-        <button id="play-button" class="btn btn-success glyphicon glyphicon-play"></button>
-        <button id="reset-button" class="btn btn-secondary">Reset</button>
-        <button id="break-button" class="btn btn-info" disabled>Start Break</button>
-    </div>
+<body>
+    <button id="theme-toggle" class="floating-button">Dark Mode</button> 
     <div class="container">
-        <div id="settings" style="display: none;">
-            <div class="row">
-                <div class="col">
-                    <label for="work-time">Work Time :</label>
-                </div>
-                <div class="col">
-                    <input type="number" id="work-time" value="25">
-                </div>
-                <div class="col">
-                    <label for="short-break">Short Break :</label>
-                </div>
-                <div class="col">
-                    <input type="number" id="short-break" value="5">
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <label for="long-break">Long Break :</label>
-                </div>
-                <div class="col">
-                    <input type="number" id="long-break" value="30">
-                </div>
-                <div class="col">
-                    <label for="long-break-interval">long break interval:</label>
-                </div>
-                <div class="col">
-                    <input type="number" id="long-break-interval" value="4" >
-                </div>
+        <h1>Pomodoro Timer</h1>
+        
+        <div class="timer-display">
+            <div id="timer">25:00</div>
+            <div class="next-break">
+                Next Break in: <span id="break-time">0</span> minutes
             </div>
         </div>
+
+        <div id="controls" class="controls">
+            <!-- Buttons will be dynamically added by JavaScript -->
+        </div>
+
+        <div id="settings" class="settings">
+            <!-- Settings inputs will be dynamically added by JavaScript -->
+        </div>
     </div>
+
     <script src="scripts/script.js"></script>
 </body>
 </html>

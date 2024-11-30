@@ -1,137 +1,245 @@
-let timer = document.getElementById("timer");
+// Pomodoro Timer Script
 
-let playButton = document.getElementById("play-button");
-let resetButton = document.getElementById("reset-button");
-let breakButton = document.getElementById("break-button");
-let settingsDiv = document.getElementById("settings");
+class PomodoroTimer {
+    constructor() {
+        // DOM Elements
+        this.display = document.querySelector("#timer");
+        this.breakTimeDisplay = document.querySelector("#break-time");
+        this.controlsContainer = document.querySelector("#controls");
+        this.settingsContainer = document.querySelector("#settings");
 
-let workTime = document.getElementById("work-time");
-let baseBreakDurationLong = document.getElementById("long-break");
-let baseBreakDurationShort = document.getElementById("short-break");
-let longBreakInterval = document.getElementById("long-break-interval");
-let shortBreakIncrease = 0.1;
-let longBreakIncrease = 0.3;
-let breakTimeElement = document.getElementById("break-time");
-let worker = new Worker('scripts/worker.js'); // Updated path
+        // Timer Buttons
+        this.playPauseButton = this.createButton('Play', 'play-pause');
+        this.resetButton = this.createButton('Reset', 'reset');
+        this.breakButton = this.createButton('Start Break', 'break');
 
-let extraTime = 0;
-let secondsElapsed = 0;
-let workSessions = 0;
-let isWorking = true;
-let settingsDisplay = 0;
-let currentBreakTime = 0;
+        // Input Elements
+        this.workTimeInput = this.createInput('work-time', this.getSetting('work-time', 25), 1, 60);
+        this.shortBreakInput = this.createInput('short-break-time', 5, 1, 30);
+        this.longBreakInput = this.createInput('long-break-time', 15, 1, 45);
+        this.longBreakIntervalInput = this.createInput('long-break-interval', 4, 1, 10);
 
-function showSettings(){
-    if(settingsDisplay === 0){
-        settingsDiv.style.display = 'block';
-        settingsDisplay = 1;
-    } else {
-        settingsDiv.style.display = 'none';
-        settingsDisplay = 0;
+        // State Variables
+        this.startTime = 0;
+        this.elapsedTime = 0;
+        this.timerInterval = null;
+        this.workSessions = 0;
+        this.isTimerRunning = false;
+        this.playPauseButton.textContent = 'Start';
+        this.isWorking = true;
+
+        // Initialize application
+        this.initializeUI();
+        this.initializeEventListeners();
+        this.display.textContent = `${this.pad(this.workTimeInput.value)}:00`;
     }
-}
 
-function formatTime(seconds, limit) {
-    let minutes = Math.floor(seconds / 60);
-    seconds = seconds % 60;
-    return minutes.toString().padStart(2, "0") + ":" + seconds.toString().padStart(2, "0") + " / " + limit.toString().padStart(2, "0") + ":00";
-}
+    createButton(text, id) {
+        const button = document.createElement('button');
+        button.textContent = text;
+        button.id = id;
+        this.controlsContainer.appendChild(button);
+        return button;
+    }
 
-function startWorker() {
-    console.log("Starting worker with data:", {
-        isWorking,
-        secondsElapsed,
-        workTime: workTime.value,
-        baseBreakDurationShort: baseBreakDurationShort.value,
-        baseBreakDurationLong: baseBreakDurationLong.value,
-        longBreakInterval: longBreakInterval.value,
-        workSessions 
-    });
-    worker.postMessage({
-        isWorking,
-        secondsElapsed,
-        workTime: workTime.value,
-        baseBreakDurationShort: baseBreakDurationShort.value,
-        baseBreakDurationLong: baseBreakDurationLong.value,
-        longBreakInterval: longBreakInterval.value,
-        workSessions 
-    });
-}
+    getSetting(key, defaultValue) {
+        const storedValue = localStorage.getItem(key);
+        return storedValue ? parseInt(storedValue) : defaultValue;
+    }
 
-worker.onmessage = function(event) {
-    console.log("Main script received message:", event.data);
-    const { currentBreakTime: newBreakTime, secondsElapsed: newSecondsElapsed } = event.data;
-    currentBreakTime = newBreakTime;
-    secondsElapsed = newSecondsElapsed;
-    breakTimeElement.textContent = currentBreakTime.toFixed(2);
-    timer.textContent = formatTime(secondsElapsed, isWorking ? workTime.value : Math.floor(currentBreakTime / 60));
+    createInput(id, defaultValue, min, max) {
+        const inputContainer = document.createElement('div');
+        const label = document.createElement('label');
+        label.textContent = id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.id = id;
+        input.value = defaultValue;
+        input.min = min;
+        input.max = max;
+
+        inputContainer.appendChild(label);
+        inputContainer.appendChild(input);
+        this.settingsContainer.appendChild(inputContainer);
+
+        return input;
+    }
+
+    initializeUI() {
+        // Initially show settings
+        this.settingsContainer.style.display = 'block';
+    }
+
+    initializeEventListeners() {
+        const themeToggleButton = document.getElementById('theme-toggle');
+            themeToggleButton.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+
+                // Update button text based on theme
+                themeToggleButton.textContent = document.body.classList.contains('dark-mode')
+                    ? 'Light Mode'
+                    : 'Dark Mode';
+        });
+
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                this.validateInput(input);
+                localStorage.setItem(input.id, input.value);
+            });
+        });
+
+        // Play/Pause Button
+        this.playPauseButton.addEventListener('click', () => this.toggleTimer());
+
+        // Reset Button
+        this.resetButton.addEventListener('click', () => this.resetTimer());
+
+        // Break Button
+        this.breakButton.addEventListener('click', () => this.startBreak());
+
+        // Input Validation
+        const inputs = [
+            this.workTimeInput, 
+            this.shortBreakInput, 
+            this.longBreakInput, 
+            this.longBreakIntervalInput
+        ];
+
+        inputs.forEach(input => {
+            input.addEventListener('change', () => this.validateInput(input));
+        });
+    }
+
+    validateInput(input) {
+        const value = parseInt(input.value);
+        const min = parseInt(input.min);
+        const max = parseInt(input.max);
+
+        if (value < min) input.value = min;
+        if (value > max) input.value = max;
+    }
+
+    toggleTimer() {
+        if (!this.isTimerRunning) {
+            this.startTimer();
+        } else {
+            this.pauseTimer();
+        }
+    }
+
+    startTimer() {
+        if (this.isTimerRunning) return;
+
+        this.startTime = Date.now() - this.elapsedTime;
+        this.timerInterval = setInterval(() => this.updateDisplay(), 1000);
+        
+        this.isTimerRunning = true;
+        this.playPauseButton.textContent = 'Pause';
+        this.lockSettings();
+    }
+
+    pauseTimer() {
+        if (!this.isTimerRunning) return;
+
+        clearInterval(this.timerInterval);
+        this.elapsedTime = Date.now() - this.startTime;
+        
+        this.isTimerRunning = false;
+        this.playPauseButton.textContent = 'Resume';
+        this.unlockSettings();
+    }
+
+    resetTimer() {
+        clearInterval(this.timerInterval);
+        
+        this.startTime = 0;
+        this.elapsedTime = 0;
+        this.workSessions = 0;
+        this.isTimerRunning = false;
+        this.isWorking = true;
+
+        this.playPauseButton.textContent = 'Start';
+        this.updateDisplay();
+        this.unlockSettings();
+    }
+
+    startBreak() {
+        this.workSessions++;
+        this.isWorking = !this.isWorking;
     
-    // Enable the break button if the study time exceeds the work time
-    if (isWorking && (secondsElapsed / 60) >= workTime.value) {
-        breakButton.disabled = false;
+        // Determine break duration
+        const shortBreakTime = parseInt(this.shortBreakInput.value);
+        const longBreakTime = parseInt(this.longBreakInput.value);
+        const longBreakInterval = parseInt(this.longBreakIntervalInput.value);
+    
+        clearInterval(this.timerInterval);
+    
+        if (this.isWorking) {
+            // Start work timer
+            this.startCustomTimer(parseInt(this.workTimeInput.value));
+        } else {
+            // Start break timer
+            if (this.workSessions % longBreakInterval === 0) {
+                this.startCustomTimer(longBreakTime);
+            } else {
+                this.startCustomTimer(shortBreakTime);
+            }
+        }
+    
+        this.breakButton.textContent = this.isWorking ? 'Start Break' : 'Start Work';
     }
 
-    if (!isWorking && secondsElapsed >= currentBreakTime * 60) {
-        isWorking = true;
-        secondsElapsed = 0;
-        timer.textContent = formatTime(secondsElapsed, workTime.value);
-        breakTimeElement.parentNode.style.display = "block";
-        startWorker();
-        breakButton.textContent = "Start Break";
+    startCustomTimer(duration) {
+        if (!this.isTimerRunning) return;
+        this.startTime = Date.now();
+        this.elapsedTime = 0; // Reset elapsed time for accurate break duration
+        this.timerInterval = setInterval(() => this.updateDisplay(duration), 1000);
+        this.isTimerRunning = true;
+        this.playPauseButton.textContent = 'Pause';
     }
-};
 
-playButton.addEventListener("click", () => {
-    playButton.classList.toggle('glyphicon-play');
-    playButton.classList.toggle('glyphicon-pause');
-    if (playButton.classList.contains('glyphicon-pause')) {
-        startWorker();
-    } else {
-        worker.postMessage({ pause: true });
+    updateDisplay(customDuration = null) {
+        const totalTime = (customDuration || parseInt(this.workTimeInput.value)) * 60 * 1000;
+        const elapsedTime = Date.now() - this.startTime + this.elapsedTime; // Include elapsed time
+        const timeRemaining = Math.max(0, totalTime - elapsedTime);
+    
+        const minutes = Math.floor(timeRemaining / (60 * 1000));
+        const seconds = Math.floor((timeRemaining % (60 * 1000)) / 1000);
+    
+        this.display.textContent = `${this.pad(minutes)}:${this.pad(seconds)}`;
+        this.breakTimeDisplay.textContent = minutes;
+    
+        if (timeRemaining <= 0) {
+            clearInterval(this.timerInterval);
+            this.startBreak();
+        }
     }
-});
 
-resetButton.addEventListener("click", () => {
-    worker.terminate();
-    worker = new Worker('scripts/worker.js'); // Updated path
-    secondsElapsed = 0;
-    isWorking = true;
-    timer.textContent = formatTime(0, workTime.value);
-    breakTimeElement.textContent = "0.00";
-    playButton.classList.remove('glyphicon-pause');
-    playButton.classList.add('glyphicon-play');
-    breakButton.disabled = true; // Reset the break button state
-});
+    lockSettings() {
+        [
+            this.workTimeInput, 
+            this.shortBreakInput, 
+            this.longBreakInput, 
+            this.longBreakIntervalInput
+        ].forEach(input => input.disabled = true);
+    }
 
-function startWork() {
-    isWorking = true;
-    secondsElapsed = 0;
-    timer.textContent = formatTime(secondsElapsed, workTime.value);
-    breakTimeElement.parentNode.style.display = "inline";
-    breakButton.textContent = "Start Break";
-    playButton.classList.remove('glyphicon-play');
-    playButton.classList.add('glyphicon-pause');
-    startWorker();
+    unlockSettings() {
+        [
+            this.workTimeInput, 
+            this.shortBreakInput, 
+            this.longBreakInput, 
+            this.longBreakIntervalInput
+        ].forEach(input => input.disabled = false);
+    }
+
+    pad(number) {
+        return number.toString().padStart(2, '0');
+    }
 }
 
-function startBreak() {
-    workSessions++;
-    isWorking = false;
-    extraTime = Math.max(0, (secondsElapsed / 60) - workTime.value);
-    currentBreakTime = parseInt(baseBreakDurationShort.value) + extraTime * shortBreakIncrease;
-    secondsElapsed = 0;
-    timer.textContent = formatTime(secondsElapsed, Math.floor(currentBreakTime / 60));
-    breakTimeElement.parentNode.style.display = "none";
-    startWorker();
-    breakButton.textContent = "Start Work";
-    playButton.classList.remove('glyphicon-play');
-    playButton.classList.add('glyphicon-pause');
-}
-
-breakButton.addEventListener("click", () => {
-    if (isWorking) {
-        startBreak();
-    } else {
-        startWork();
-    }
+// Initialize the timer when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new PomodoroTimer();
 });

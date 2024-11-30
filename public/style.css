@@ -1,27 +1,191 @@
-#timer {
-    font-size: 3rem;
-    font-weight: bold;
-    text-align: center;
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
-#controls {
+
+
+body {
+    font-family: sans-serif;
     display: flex;
     justify-content: center;
-    margin-top: 20px;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f4f4f4; /* Light mode background */
+    color: #333; /* Light mode text color */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition for theme change */
 }
-#play-button, #break-button, #reset-button, #settings-button {
-    margin-left:5px;
-    margin-right: 5px;
+
+body.dark-mode {
+    background-color: #333; /* Dark mode background */
+    color: #f4f4f4; /* Dark mode text color */
 }
-#settings {
-    margin: 20px;
+
+.container {
+    background-color: #fff; /* Light mode container background */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for theme change */
 }
-input[type="number"] {
-    width: 50px;
-    padding: 5px;
-    border: 1px solid black;
+
+body.dark-mode .container {
+    background-color: #222; /* Dark mode container background */
+    color: #eee; /* Dark mode container text color */
+    box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.container h1 { /* Assuming you have an h1 for the title */
+    color: #333; /* Light mode title color */
+    transition: color 0.3s ease;
+}
+
+body.dark-mode .container h1 {
+    color: #eee; /* Dark mode title color */
+}
+
+.container button {
+    background-color: #007bff; /* Light mode button background */
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
     border-radius: 5px;
-    margin: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+
 }
-.text-center {
-    text-align: center;
+
+body.dark-mode .container button {
+    background-color: #6c757d; /* Dark mode button background */
+    color: #eee;
 }
+
+.container input {
+    background-color: #fff; /* Light mode input background */
+    color: #333; /* Light mode input text color */
+    border: 1px solid #ced4da;
+    padding: 8px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+body.dark-mode .container input {
+    background-color: #222; /* Dark mode input background */
+    color: #eee; /* Dark mode input text color */
+    border-color: #6c757d;
+}
+
+
+/* Timer Display */
+.timer-display {
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+#timer {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.next-break {
+    color: #7f8c8d;
+    font-size: 1rem;
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+/* Settings */
+.settings {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.settings div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.settings label {
+    color: #34495e;
+    margin-right: 1rem;
+}
+
+.settings input {
+    width: 80px;
+    padding: 0.5rem;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .container {
+        width: 95%;
+        padding: 1rem;
+    }
+
+    #timer {
+        font-size: 3rem;
+    }
+
+    .controls {
+        flex-direction: column;
+    }
+
+    button {
+        width: 100%;
+    }
+}
+
+.floating-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    background-color: #333; /* Example dark mode color */
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 1000; /* Ensure button appears on top */
+}
+
+/* Disabled State */
+input:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+

@@ -1,40 +1,50 @@
+// Improved Pomodoro Worker
 let intervalId;
-let currentSecondsElapsed = 0;
+let currentState = {
+    secondsElapsed: 0,
+    isWorking: true,
+    workTime: 25,
+    baseBreakDurationShort: 5,
+    baseBreakDurationLong: 15,
+    longBreakInterval: 4,
+    workSessions: 0
+};
 
 self.onmessage = function(event) {
-    const { isWorking, secondsElapsed, workTime, baseBreakDurationShort, baseBreakDurationLong, longBreakInterval, workSessions, pause } = event.data;
-    // console.log("Worker received message:", event.data);
+    const { pause, ...newState } = event.data;
 
-    clearInterval(intervalId);
-
-    if (pause) {
-        return;  // If the message is to pause, do nothing further.
+    // Clear any existing interval
+    if (intervalId) {
+        clearInterval(intervalId);
     }
 
-    currentSecondsElapsed = secondsElapsed;
+    // If pause is true, stop processing
+    if (pause) return;
+
+    // Update state if new state is provided
+    if (Object.keys(newState).length > 0) {
+        currentState = { ...currentState, ...newState };
+    }
 
     intervalId = setInterval(() => {
-        currentSecondsElapsed += 1;
+        currentState.secondsElapsed++;
 
+        // Complex break time calculation
         let currentBreakTime;
-        if (isWorking) {
-            let extraTime = Math.max(0, (currentSecondsElapsed / 60) - workTime);
-            if (workSessions % longBreakInterval === 0 && workSessions !== 0) {
-                currentBreakTime = parseInt(baseBreakDurationLong) + extraTime * 0.3;
-            } else {
-                currentBreakTime = parseInt(baseBreakDurationShort) + extraTime * 0.1;
-            }
+        if (currentState.isWorking) {
+            let extraTime = Math.max(0, (currentState.secondsElapsed / 60) - currentState.workTime);
+            currentBreakTime = currentState.workSessions % currentState.longBreakInterval === 0
+                ? currentState.baseBreakDurationLong + extraTime * 0.3
+                : currentState.baseBreakDurationShort + extraTime * 0.1;
         } else {
-            currentBreakTime = parseInt(baseBreakDurationShort);
+            currentBreakTime = currentState.baseBreakDurationShort;
         }
 
+        // Send updated state back to main thread
         self.postMessage({
             currentBreakTime,
-            secondsElapsed: currentSecondsElapsed
+            secondsElapsed: currentState.secondsElapsed,
+            isWorking: currentState.isWorking
         });
-        // console.log("Worker sent message:", {
-        //     currentBreakTime,
-        //     secondsElapsed: currentSecondsElapsed
-        // });
     }, 1000);
 };
